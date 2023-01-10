@@ -177,14 +177,8 @@ def train(epoch):
             inputs, targets = inputs.cuda(), targets.cuda() # GPU settings
         optimizer.zero_grad()
         inputs, targets = Variable(inputs), Variable(targets)
-        out_e, out_h, norm = net(inputs)               # Forward Propagation
-        loss_e = criterion(out_e, targets)  # Loss
-        loss_h = criterion(out_h, targets)
-        loss = (loss_e + loss_h) / 2
-        # log_norm = torch.log(norm)
-        # loss += l_reg * torch.norm(log_norm - torch.mean(log_norm))
-        #loss += l_reg * torch.mean(norm)
-        loss += l_reg * torch.var(norm)
+        out = net(inputs)               # Forward Propagation
+        loss = criterion(out, targets)
         loss.backward()   # Backward Propagation
         optimizer.step()  # Optimizer update
 
