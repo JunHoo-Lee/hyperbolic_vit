@@ -50,6 +50,7 @@ class Attention(nn.Module):
 
         self.to_qkv = nn.Linear(dim, inner_dim * 3, bias = False)
 
+
         self.to_out = nn.Sequential(
             nn.Linear(inner_dim, dim),
             nn.Dropout(dropout)
@@ -62,6 +63,8 @@ class Attention(nn.Module):
         # Changed Vector Multiplication to multiplication on the Poincare Ball
         hyp_q = self.ToPoincare(q)
         hyp_k = self.ToPoincare(k)
+
+        print("shape difference:", hyp_q.shape, q.shape)
 
         dots = mobius_matvec(hyp_q.transpose(-1, -2), hyp_k.transpose(-1, -2), c=self.c) * self.scale
 
