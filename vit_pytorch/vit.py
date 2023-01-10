@@ -64,7 +64,6 @@ class Attention(nn.Module):
         hyp_q = self.ToPoincare(q)
         hyp_k = self.ToPoincare(k)
 
-        print("shape difference:", hyp_q.shape, q.shape)
 
         dots = mobius_matvec(hyp_q, hyp_k, c=self.c) * self.scale
 
