@@ -395,6 +395,7 @@ def mobius_matvec(m, x, *, c=1.0):
 def _mobius_matvec(m, x, c):
     x_norm = torch.clamp_min(x.norm(dim=-1, keepdim=True, p=2), 1e-5)
     sqrt_c = c ** 0.5
+    print(x.shape, m.shape)
     mx = x @ m.transpose(-1, -2)
     mx_norm = mx.norm(dim=-1, keepdim=True, p=2)
     res_c = tanh(mx_norm / x_norm * artanh(sqrt_c * x_norm)) * mx / (mx_norm * sqrt_c)
