@@ -66,7 +66,9 @@ class Attention(nn.Module):
 
         print("shape difference:", hyp_q.shape, q.shape)
 
-        dots = mobius_matvec(hyp_q.transpose(-1, -2), hyp_k.transpose(-1, -2), c=self.c) * self.scale
+        dots = torch.matmul(hyp_q, hyp_k.transpose(-1, -2)) * self.scale
+
+        # dots = mobius_matvec(hyp_q.transpose(-1, -2), hyp_k.transpose(-1, -2), c=self.c) * self.scale
 
         attn = self.attend(dots)
         attn = self.dropout(attn)
