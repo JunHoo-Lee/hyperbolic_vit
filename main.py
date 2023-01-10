@@ -186,14 +186,11 @@ def train(epoch):
         _, predicted = torch.max(out.data, 1)
         total += targets.size(0)
         correct += predicted.eq(targets.data).cpu().sum()
-        total_norm += norm.mean().item()
-        total_normlog += torch.log(norm/norm.mean()).mean().item()
-        total_var += norm.var().item()
 
         sys.stdout.write('\r')
-        sys.stdout.write('| Epoch [%3d/%3d] Iter[%3d/%3d]\t\tLoss: %.4f Acc@1: %.3f%% Norm: %.3f%% var: %.3f%% normlog: %.3f'
+        sys.stdout.write('| Epoch [%3d/%3d] Iter[%3d/%3d]\t\tLoss: %.4f Acc@1: %.3f'
                 %(epoch, num_epochs, batch_idx+1,
-                    (len(trainset)//batch_size)+1, loss.item(), 100.*correct/total, total_norm/(batch_idx+1), total_var/(batch_idx+1),total_normlog/(batch_idx+1)))
+                    (len(trainset)//batch_size)+1, loss.item(), 100.*correct/total))
         sys.stdout.flush()
 
 def test(epoch):
@@ -219,10 +216,7 @@ def test(epoch):
             if use_cuda:
                 inputs, targets = inputs.cuda(), targets.cuda()
             inputs, targets = Variable(inputs), Variable(targets)
-            outputs, _, norm = net(inputs)
-            norm_val+= norm.mean().item()
-            normlog_val += torch.log(norm/norm.mean()).mean().item()
-            var_val+= torch.var(norm).item()
+            outputs = net(inputs)
             val_idx += 1
             loss = criterion(outputs, targets)
 
@@ -233,34 +227,10 @@ def test(epoch):
 
         # Save checkpoint when best model
         acc = 100.*correct/total
-        norm_val = norm_val/val_idx
-        normlog_val = normlog_val/val_idx
         var_val = var_val / val_idx
-        print("\n| Validation Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f%% Norm: %.3f%% VAR: %.3f%% normlog: %.3f" %(epoch, loss.item(), acc, norm_val,var_val,normlog_val))
+        print("\n| Validation Epoch #%d\t\t\tLoss: %.4f Acc@1: %.2f" %(epoch, loss.item(), acc))
 
-        for batch_idx, (inputs, targets) in enumerate(testloader_stl):
-            if use_cuda:
-                inputs, targets = inputs.cuda(), targets.cuda()
-            inputs, targets = Variable(inputs), Variable(targets)
-            outputs, _, norm = net(inputs)
-            loss = criterion(outputs, targets)
-            norm_stl += norm.mean().item()
-            normlog_stl += torch.log(norm/norm.mean()).mean().item()
-            var_stl += torch.var(norm).item()
-            stl_idx += 1
-
-            test_loss_stl += loss.item()
-            _, predicted = torch.max(outputs.data, 1)
-            total_stl += targets.size(0)
-            correct_stl += predicted.eq(targets.data).cpu().sum()
-
-        # Save checkpoint when best model
-        acc_stl = 100.*correct_stl/total_stl
-        norm_stl = norm_stl/stl_idx
-        normlog_stl = normlog_stl/stl_idx
-        var_stl = var_stl/stl_idx
-        print("| Validation Epoch stl #%d\t\tLoss: %.4f Acc@1: %.2f%% Norm: %.3f%% VAR: %.3f%% normlog: %.3f" %(epoch, loss.item(), acc_stl, norm_stl,var_stl,normlog_stl))
-        if acc > best_acc:
+    if acc > best_acc:
             print('| Saving Best model...\t\t\tTop1 = %.2f%%' %(acc))
             state = {
                     'net':net.module if use_cuda else net,
