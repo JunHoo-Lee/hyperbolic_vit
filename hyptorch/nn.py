@@ -238,8 +238,8 @@ class ToPoincare(nn.Module):
 
         if self.train_x:
             xp = pmath.project(pmath.expmap0(self.xp, c=self.c), c=self.c)
-            return self.grad_fix(pmath.project(pmath.expmap(xp, x, c=self.c), c=self.c)), x_norm
-        return self.grad_fix(pmath.project(pmath.expmap0(x, c=self.c), c=self.c)), x_norm
+            return self.grad_fix(pmath.project(pmath.expmap(xp, x, c=self.c), c=self.c))
+        return self.grad_fix(pmath.project(pmath.expmap0(x, c=self.c), c=self.c))
 
     def extra_repr(self):
         return "c={}, train_x={}".format(self.c, self.train_x)
