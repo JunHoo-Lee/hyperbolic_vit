@@ -63,7 +63,7 @@ class Attention(nn.Module):
         hyp_q = self.ToPoincare(q)
         hyp_k = self.ToPoincare(k)
 
-        dots = mobius_matvec(hyp_q, hyp_k.transpose(-1, -2), c=self.c) * self.scale
+        dots = mobius_matvec(hyp_q.transpose(-1, -2), hyp_k.transpose(-1, -2), c=self.c) * self.scale
 
         attn = self.attend(dots)
         attn = self.dropout(attn)
