@@ -3,7 +3,8 @@ from torch import nn
 
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
-
+from hyptorch.nn import ToPoincare
+from hyptorch.pmath import mobius_matvec
 # helpers
 
 def pair(t):
@@ -33,10 +34,13 @@ class FeedForward(nn.Module):
         return self.net(x)
 
 class Attention(nn.Module):
-    def __init__(self, dim, heads = 8, dim_head = 64, dropout = 0.):
+    def __init__(self, dim, heads = 8, dim_head = 64, dropout = 0.,c=0.1,clip_r=1):
         super().__init__()
         inner_dim = dim_head *  heads
         project_out = not (heads == 1 and dim_head == dim)
+
+        self.c = c
+        self.ToPoincare = ToPoincare(c=self.c,clip_r=clip_r)
 
         self.heads = heads
         self.scale = dim_head ** -0.5
@@ -55,7 +59,11 @@ class Attention(nn.Module):
         qkv = self.to_qkv(x).chunk(3, dim = -1)
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h = self.heads), qkv)
 
-        dots = torch.matmul(q, k.transpose(-1, -2)) * self.scale
+        # Changed Vector Multiplication to multiplication on the Poincare Ball
+        hyp_q = self.ToPoincare(q)
+        hyp_k = self.ToPoincare(k)
+
+        dots = mobius_matvec(hyp_q, hyp_k.transpose(-1, -2), c=self.c) * self.scale
 
         attn = self.attend(dots)
         attn = self.dropout(attn)
@@ -65,12 +73,14 @@ class Attention(nn.Module):
         return self.to_out(out)
 
 class Transformer(nn.Module):
-    def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout = 0.):
+    def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout = 0.,c=0.1, clip_r=1):
         super().__init__()
         self.layers = nn.ModuleList([])
+        self.c = c
+        self.clip_r = clip_r
         for _ in range(depth):
             self.layers.append(nn.ModuleList([
-                PreNorm(dim, Attention(dim, heads = heads, dim_head = dim_head, dropout = dropout)),
+                PreNorm(dim, Attention(dim, heads = heads, dim_head = dim_head, dropout = dropout,c=self.c,clip_r=self.clip_r)),
                 PreNorm(dim, FeedForward(dim, mlp_dim, dropout = dropout))
             ]))
     def forward(self, x):
