@@ -67,7 +67,7 @@ class Attention(nn.Module):
 
         #dots = mobius_matvec(hyp_q, hyp_k, c=self.c) * self.scale
 
-        torch.matmul(q,k.transpose(-1,-2))
+        dots = torch.matmul(q,k.transpose(-1,-2))
 
         attn = self.attend(dots)
         attn = self.dropout(attn)
